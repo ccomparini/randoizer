@@ -1,0 +1,27 @@
+<head>
+  <link rel="stylesheet" href="/default.css">
+</head>
+<body>
+  <div>
+    If you reload, you'll notice the first 2 numbers in each
+    row stay the same, but the last will change.  This is because
+    the first 2 have constant seeds, while the last is seeded
+    off the clock.
+  </div>
+  <script type="module">
+    import { Randoizer } from "https://fbmstudios.net/randoizer/randoizer.mjs";
+    const rand      = new Randoizer(23);
+    const otherRand = new Randoizer(89231);
+    const clockSeed = new Randoizer();
+    for(let i = 0; i < 23; i++) {
+       const randstr = `Some rands: ${rand.next()} ${otherRand.next()} ${clockSeed.next()}`;
+
+       console.log(randstr);
+
+       const shower = document.createElement("div");
+       shower.appendChild(document.createTextNode(randstr));
+       document.body.appendChild(shower);
+    }
+  </script>
+</body>
+ 
