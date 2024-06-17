@@ -27,13 +27,17 @@ export class Randoizer {
     if(typeof seed === "undefined") {
       seed = Date.now();
     }
-    this.state = seed;
+    this.reseed(seed);
+  }
+
+  reseed(seed) {
+    this.state = BigInt(seed);
   }
 
   next() {
     // https://en.wikipedia.org/wiki/Linear_congruential_generator
-    this.state = (1103515245 * this.state + 12345) % 2147483648;
-    return this.state;
+    this.state = (1103515245n * this.state + 12345n) % 2147483648n;
+    return Number(this.state);
   }
 }
 
