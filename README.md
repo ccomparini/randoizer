@@ -29,6 +29,5 @@ Usage:
     }
 
 Methods:
-    next()       - returns the next random number in the sequence.
-    reseed(seed) - resets the random seed.  passing a prior result of next()
-                   rewinds to that point in the sequence.
+  * next()       - returns the next random number in the sequence.
+  * reseed(seed) - resets the random seed.  passing a prior result of next() rewinds to that point in the sequence.
