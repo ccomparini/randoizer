@@ -18,7 +18,7 @@ thoroughly for anything else.
 
 Usage:
 
-    import { Randoizer } from "./randoizer.mjs";
+    import { Randoizer } from "https://fbmstudios.net/lib/randoizer.mjs";
 
     // 3 independent random number generators:
     const rand      = new Randoizer(23);
