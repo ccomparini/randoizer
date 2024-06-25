@@ -6,24 +6,39 @@
     <label>Random seed: <input type="number" min="0" step="1" data-controls="seed"></label>
     <label>sample size: <input type="number" min="0" step="1000" data-controls="sampleSize"></label>
     <div>
-      Test using a bit mask with 
-      <label>lowest bit: <input type="number" min="0" max="30" step="1" data-controls="lowestBit"></label>
-      <label>highest bit: <input type="number" min="0" max="31" step="1" data-controls="highestBit"></label>
-      (both inclusive)
-      (mask: <span data-shows="maskStr"></span>)
-      <input id="do-mask-histogram" type="button" value="go"/>
-    </div>
-    OR
-    <div>
-      Test using modulo division
-      <label><code>rand%<input type="number" min="1" step="1" data-controls="modulo"></code></label>
-      <input id="do-mod-histogram" type="button" value="go"/>
+      Test using:
+      <div>
+        <input type="radio" name="reduceMode" value="mask" data-controls="reduceMode">
+          bits from
+          <label>lowest bit:
+            <input type="number" min="0" max="30" step="1" data-controls="lowestBit">
+          </label>
+          <label>highest bit:
+            <input type="number" min="0" max="30" step="1" data-controls="highestBit">
+          </label>
+          (bitmask: <code><span data-shows="maskStr"></span></code>)
+        </input>
+      </div>
+      <div>
+        <input type="radio" name="reduceMode" value="mod" data-controls="reduceMode">
+          <label>
+            <code>rand%<input type="number" min="1" step="1" data-controls="modulo"></code>
+          </label>
+        </input>
+      </div>
     </div>
   </div>
   <div id="histo">
-    <div data-expands="histogram">
-      <span data-shows="">
-    </div>
+    <table>
+      <tr>
+        <th>Result</th>
+        <th>Times generated</th>
+      </tr>
+      <tr data-expands="histogram">
+        <td id="keyshower" data-shows="@key"></td>
+        <td data-shows=""></td>
+      </tr>
+    </table>
   </div>
   <script src="/uiulars/uiulator.js"> </script>
   <script type="module">
@@ -31,7 +46,7 @@
 
     import { Randoizer } from "./randoizer.mjs";
 
-    // js keeps jamming in sign bits when I try to shift.
+    // js keeps jamming in sign bits when I try to shift left.
     // here's my solution:
     const leftShiftMask = [
         0xffffffff,
@@ -74,14 +89,16 @@
         sampleSize: 100000,
         lb:              0,
         hb:              7,
-        modulo:          5,
+        modulo:         35,
+        reduceMode:  "mod",
 
         get lowestBit() { return this.lb; },
         set lowestBit(nlb) {
             nlb = parseInt(nlb);
             if(nlb !== undefined) {
-                if(nlb <= this.hb)
-                    this.lb = nlb;
+                this.lb = nlb;
+                if(this.lb > this.hb)
+                    this.hb = this.lb;
             }
             return this.lb;
         },
@@ -90,8 +107,9 @@
         set highestBit(nhb) {
             nhb = parseInt(nhb);
             if(nhb !== undefined) {
-                if(nhb >= this.lb)
-                    this.hb = nhb;
+                this.hb = nhb;
+                if(this.hb < this.lb)
+                    this.lb = this.hb;
             }
             return this.hb;
         },
@@ -106,35 +124,44 @@
             return "0x" + this.mask.toString(16).padStart(8, '0');
         },
     };
-    const histogram = [ ];
-    const uiData = { settings: settings, histogram: histogram };
-    const uila = uiulator(uiData, document, { 'update-on-change':true });
     const rand = new Randoizer(settings.seed);
 
-    document.getElementById("do-mask-histogram").onclick = () => {
-        const mask = settings.mask;
-        histogram.length = 0; // kill existing
-        histogram.length = 1 << (settings.highestBit - settings.lowestBit);
-        for(let sind = 0; sind < settings.sampleSize; sind++) {
-            let val = rand.next();
-            val = val & mask;
-            if(!histogram[val]) histogram[val] = 1;
-            else                histogram[val]++;
-        }
-
+    const uiData = {
+      settings: settings,
+      histogram: makeHistogram(settings.reduceMode),
+    };
+    const uila = uiulator(uiData, document, {
+      'control-on-submit': true,
+      oncontrolchanged: (ev, elem, container, specificVar) => {
+        rand.reseed(settings.seed);
+        uiData.histogram = makeHistogram(settings.reduceMode);
         uila.update();
-    }
+      },
+    });
 
-    document.getElementById("do-mod-histogram").onclick = () => {
-        histogram.length = 0; // kill existing
-        histogram.length = settings.modulo;
-        for(let sind = 0; sind < settings.sampleSize; sind++) {
-            let val = rand.next() % settings.modulo;
-            if(!histogram[val]) histogram[val] = 1;
-            else                histogram[val]++;
+    function makeHistogram(mode) {
+        const histogram = [ ];
+        if(mode === "mask") {
+            const mask = settings.mask;
+            histogram.length = 2 << (settings.highestBit - settings.lowestBit);
+            histogram.fill(0, 0);
+            for(let sind = 0; sind < settings.sampleSize; sind++) {
+                let val = rand.next();
+                val = (val & mask) >>> settings.lowestBit;
+                if(!histogram[val]) histogram[val] = 1;
+                else                histogram[val]++;
+            }
+        } else if(mode === "mod") {
+            histogram.length = settings.modulo;
+            histogram.fill(0, 0);
+            for(let sind = 0; sind < settings.sampleSize; sind++) {
+                let val = rand.next() % settings.modulo;
+                if(!histogram[val]) histogram[val] = 1;
+                else                histogram[val]++;
+            }
         }
-        uila.update();
-    }
+        return histogram;
+    };
 
   </script>
 </body>
