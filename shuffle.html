@@ -1,0 +1,57 @@
+<head>
+  <link rel="stylesheet" href="/default.css">
+  <style>
+    .randnum {
+      border: solid 2px #303080;
+      border-radius: 5px;
+      margin: 4px;
+      width: 2rem;
+      display: inline-flex; 
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div data-scope="settings">
+    <label>Random seed: <input type="number" min="0" step="1" data-controls="seed"></label>
+    <label>Length of array: <input type="number" min="0" data-controls="len"></label>
+  </div>
+  <br>
+  <div>
+    <span class="randnum" data-expands="arr" data-shows> </span>
+  </div>
+  <script src="/uiulars/uiulator.js"> </script>
+  <script type="module">
+    import { Randoizer } from "./randoizer.mjs";
+
+    const data = {
+      settings: {
+        seed: 0x2323,
+        len:  23,
+      },
+      rand: new Randoizer(),
+      arr: [ ],
+    };
+
+    function updateData() {
+      data.rand.reseed(data.settings.seed);
+      data.arr.length = data.settings.len;
+      for(let ind = 0; ind < data.arr.length; ind++) {
+        data.arr[ind] = ind;
+      }
+      data.rand.knuthShuffle(data.arr);
+    }
+    updateData();
+
+    const uila = uiulator(data, document, {
+      'control-on-submit': true,
+      oncontrolchanged: (ev, elem, container, specificVar) => {
+        updateData();
+        uila.update();
+      },
+    });
+
+  </script>
+</body>
+    
+
