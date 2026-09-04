@@ -1,7 +1,7 @@
 /**
  * class Randoizer - Deterministic random integer generator.
  *
- * Generates sequences of random integers based on a seed given to the
+ * Generates sequences of random 32 bit integers based on a seed given to the
  * constructor.  This is useful for games, fractal terrain, fuzz testing,
  * etc.
  *
@@ -17,12 +17,16 @@
  *  const otherRand = new Randoizer(89231);
  *  const clockSeed = new Randoizer();
  *  for(let i = 0; i < 23; i++) {
- *    console.log(`${rand.next()} ${otherRand.next()} ${clockSeed.next()}`);
+ *
+ *    console.log(`${rand.nexti()} ${otherRand.nextf()} ${clockSeed.nexti()}`);
  *  }
  *
  */
 
 export class Randoizer {
+  static #MODULUS = ((1n << 48n) - 1n);  // 48 bits; internal
+  static #RESULT_SHIFT = 16n;             // (needs to correspond to MODULUS)
+
   constructor(seed) {
     if(seed === undefined) {
       seed = Date.now();
@@ -33,8 +37,8 @@ export class Randoizer {
   /**
    *  Resets the state of the randomizer to the seed passed.
    *
-   *  The "seed" can be considered the prior value of next();
-   *  as such, reseeding with a prior next() value resets to
+   *  The "seed" can be considered the prior value of nexti();
+   *  as such, reseeding with a prior nexti() value resets to
    *  that point in the sequence.
    */
   reseed(seed) {
@@ -42,16 +46,23 @@ export class Randoizer {
   }
 
   /**
-   *  Returns the next integer in the sequence.
+   *  Returns the next 32 bit integer in the sequence.
    */
-  next() {
+  nexti32() {
     // https://en.wikipedia.org/wiki/Linear_congruential_generator
-    this.state = (1103515245n * this.state + 12345n) % 2147483648n;
-    return Number(this.state);
+    this.state = (25214903917n * this.state + 11n) % Randoizer.#MODULUS;
+    return Number(this.state>>Randoizer.#RESULT_SHIFT);
   }
 
   /**
-   *  Returns a random number >= min and <= max.
+   *  Deprecated - use nexti32() to get the next integer.
+   */
+  next() {
+    return this.nexti32();
+  }
+
+  /**
+   *  Returns a random integer >= min and <= max.
    *
    *  Throws an exception on invalid ranges.
    */
@@ -65,7 +76,7 @@ export class Randoizer {
 
     // ... the % here is suspect....
     // Seems to work though.  shipit.
-    return this.next()%rs + min;
+    return this.nexti32()%rs + min;
   }
 
   /**
