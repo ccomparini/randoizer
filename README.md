@@ -14,9 +14,12 @@ The algorithm is from [Wikipedia](https://en.wikipedia.org/wiki/Linear_congruent
 The distributions look reasonable to me, but I haven't analyzed it
 thoroughly for anything else.
 
+.. on later observation, it looks like the low bit always alternates 1, 0.
+Weak.  
+
 **Not to be used for crypto or anything security related.**
 
-Usage:
+Example:
 
     import { Randoizer } from "https://fbmstudios.net/lib/randoizer.mjs";
 
