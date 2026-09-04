@@ -5,9 +5,14 @@
       color: red;
       font-weight: bold;
     }
+    .good-result {
+      color: green;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
+  <div id="full-fail" class="bad-result"></div>
   <div>
     <p>If you reload, you'll notice the first 2 numbers in each
     row stay the same, but the last will change.  This is because
@@ -39,7 +44,7 @@
     import { Randoizer } from "./randoizer.mjs";
 
     const resultElement = document.getElementById("test-results");
-    resultElement.innerText = "working........!";
+    resultElement.textContent = "working........!";
 
     function appendResultText(text) {
       const tdiv = document.createElement("div");
@@ -48,6 +53,11 @@
       return tdiv;  // return the div so callers can muck with it
     }
 
+    function appendGoodResultText(text) {
+      const tdiv = appendResultText(text);
+      tdiv.classList.add('good-result');
+      return tdiv;
+    }
     function appendBadResultText(text) {
       const tdiv = appendResultText(text);
       tdiv.classList.add('bad-result');
@@ -73,6 +83,8 @@
     appendResultText(`${totalAlternations} alternations in ${tryCount} runs`);
     if(totalAlternations === tryCount/2) {
       appendBadResultText(`LOOKS LIKE IT IS ALTERNATING over ${tryCount} runs, anyway`);
+    } else {
+      appendGoodResultText("... not completely alternating, at least");
     }
     
     // We need at least a 32 bit range.  See if we use the whole 32 bit range:
@@ -81,7 +93,7 @@
     let gotMin  = Number.MAX_SAFE_INTEGER;
     appendResultText(`JFYI Number.MAX_SAFE_INTEGER is ${Number.MAX_SAFE_INTEGER} and shows up in hex as ${Number.MAX_SAFE_INTEGER}`);
     for(let it = 0; it < 1000000; it++) {
-      const cur = rando.nexti32();
+      const cur = BigInt(rando.nexti32());
       gotBits |= cur;
       if(gotMax < cur) gotMax = cur;
       if(gotMin > cur) gotMin = cur;
@@ -89,11 +101,20 @@
       if(gotBits === 0xffffffffn) break;
     }
     if(gotBits === 0xffffffffn) {
-      appendResultText(`.... looks like we have at least 32 bit results!  Min: ${gotMin} Max: ${gotMax}`);
+      appendGoodResultText(`.... looks like we have at least 32 bit results!  Min: ${gotMin} Max: ${gotMax}`);
     } else {
       appendBadResultText(`SOME BITS DON'T GET SET: ${hex32(gotBits)} Min: ${hex32(gotMin)} Max: ${hex32(gotMax)}`);
     }
 
+    appendGoodResultText(`Basic checks complete`);
+
+  </script>
+  <script>
+    // error catch-all, or attempt thereat:
+    const display = document.getElementById("full-fail");
+    window.addEventListener('error', (e) => {
+      display.textContent = 'FAIL:' + e.error;
+    });
   </script>
 </body>
  
