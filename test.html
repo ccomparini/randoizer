@@ -9,6 +9,9 @@
       color: green;
       font-weight: bold;
     }
+    body {
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
 <body>
@@ -22,12 +25,13 @@
   </div>
   <script type="module">
     import { Randoizer } from "./randoizer.mjs";
+
     const rand      = new Randoizer(23);
     const otherRand = new Randoizer(89231);
     const clockSeed = new Randoizer();
     const resultDiv = document.getElementById("basic-results");
     for(let i = 0; i < 23; i++) {
-       const randstr = `Some rands: ${rand.next()} ${otherRand.next()} ${clockSeed.next()}`;
+       const randstr = `Some rands: ${rand.nextf()} ${otherRand.nextf()} ${clockSeed.nextf()}`;
 
        const shower = document.createElement("div");
        shower.appendChild(document.createTextNode(randstr));
@@ -106,15 +110,30 @@
       appendBadResultText(`SOME BITS DON'T GET SET: ${hex32(gotBits)} Min: ${hex32(gotMin)} Max: ${hex32(gotMax)}`);
     }
 
-    appendGoodResultText(`Basic checks complete`);
+    // try to see if float (0.0, 1.0) generation is at all reasonable:
+    let minF = 300.0;
+    let maxF = -300.0;
+    for(let it = 0; it < 1000000; it++) {
+      const cur = rando.nextf();
+      if(cur > maxF) maxF = cur;
+      if(cur < minF) minF = cur;
+    }
+    appendResultText(`Min and max floats we got are ${minF}, ${maxF}`);
+    if(minF == maxF) {
+      appendBadResultText(`WAT min float and max float are the same? ${minF} == ${maxF}`)
+    }
+    if(minF > 1.0) appendBadResultText(`WAT min float > 1.0??? ${minF}`);
+    if(maxF < 0.0) appendBadResultText(`WAT max float < 0.0??? ${maxF}`);
 
+
+    appendGoodResultText(`Basic checks complete`);
   </script>
+
   <script>
     // error catch-all, or attempt thereat:
     const display = document.getElementById("full-fail");
     window.addEventListener('error', (e) => {
       display.textContent = 'FAIL:' + e.error;
     });
-  </script>
 </body>
  

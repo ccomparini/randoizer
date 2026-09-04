@@ -26,6 +26,7 @@
 export class Randoizer {
   static #MODULUS = ((1n << 48n) - 1n);  // 48 bits; internal
   static #RESULT_SHIFT = 16n;             // (needs to correspond to MODULUS)
+  static #N_MODULUS = Number(Randoizer.#MODULUS)
 
   constructor(seed) {
     if(seed === undefined) {
@@ -59,6 +60,16 @@ export class Randoizer {
    */
   next() {
     return this.nexti32();
+  }
+
+  /**
+   *  Returns a float in the range (0.0, 1.0).
+   *
+   *  Note this is inclusive on each end:  1.0 is a possible result.
+   */
+  nextf() {
+    this.nexti32(); // to "move" to the next result
+    return Number(this.state) / Randoizer.#N_MODULUS;
   }
 
   /**
