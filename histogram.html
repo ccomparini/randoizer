@@ -28,15 +28,21 @@
       </div>
     </div>
   </div>
+  <hr>
+  <div id="aggregates">
+    Average: <span data-shows="histogram.average"></span>
+  </div>
   <div id="histo">
     <table>
       <tr>
         <th>Result</th>
         <th>Times generated</th>
+        <th>Diff from avg</th>
       </tr>
-      <tr data-expands="histogram">
+      <tr data-expands="histogram.results">
         <td id="keyshower" data-shows="@key"></td>
-        <td data-shows=""></td>
+        <td data-shows="timesGenerated"></td>
+        <td data-shows="diffFromAverage"></td>
       </tr>
     </table>
   </div>
@@ -139,29 +145,48 @@
       },
     });
 
+    function initHistogram(len) {
+      const hist = new Array(parseInt(len));
+      hist.fill(undefined);
+      //return Array(len).fill().map(() => ({
+      return hist.map(() => ({
+        timesGenerated: 0,
+        diffFromAverage: undefined,
+      }));
+    }
+
     function makeHistogram(mode) {
-        const histogram = [ ];
-        if(mode === "mask") {
-            const mask = settings.mask;
-            histogram.length = 2 << (settings.highestBit - settings.lowestBit);
-            histogram.fill(0, 0);
-            for(let sind = 0; sind < settings.sampleSize; sind++) {
-                let val = rand.next();
-                val = (val & mask) >>> settings.lowestBit;
-                if(!histogram[val]) histogram[val] = 1;
-                else                histogram[val]++;
-            }
-        } else if(mode === "mod") {
-            histogram.length = settings.modulo;
-            histogram.fill(0, 0);
-            for(let sind = 0; sind < settings.sampleSize; sind++) {
-                let val = rand.next() % settings.modulo;
-                if(!histogram[val]) histogram[val] = 1;
-                else                histogram[val]++;
-            }
+      let histogram = undefined;
+      if(mode === "mask") {
+        const mask = settings.mask;
+        histogram = initHistogram(2 << (settings.highestBit - settings.lowestBit));
+        for(let sind = 0; sind < settings.sampleSize; sind++) {
+          let val = rand.next();
+          val = (val & mask) >>> settings.lowestBit;
+          histogram[val].timesGenerated++;
         }
-        return histogram;
-    };
+      } else if(mode === "mod") {
+        histogram = initHistogram(settings.modulo);
+        for(let sind = 0; sind < settings.sampleSize; sind++) {
+          histogram[rand.next() % settings.modulo].timesGenerated++;
+        }
+      }
+
+      let total = 0;
+      for(let res in histogram) {
+        total += histogram[res].timesGenerated;
+      }
+      const avg = total/histogram.length;
+
+      for(let sind = 0; sind < histogram.length; sind++) {
+        histogram[sind].diffFromAverage = (histogram[sind].timesGenerated - avg).toFixed(2);
+      }
+
+      return {
+        average: avg.toFixed(2),
+        results: histogram,
+      }
+    }
 
   </script>
 </body>
